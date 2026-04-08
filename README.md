@@ -253,7 +253,68 @@ WQF7010 ROBOTICS AND AUTOMATION/
 ```
 
 ---
+You’re hitting a Python-environment mismatch (Conda Python is being used for ROS Noetic), so I’ll walk you through resetting to system Python and installing missing ROS Python deps.
 
+### Checklist
+- [ ] Exit Conda so ROS uses Ubuntu/system Python
+- [ ] Install missing package `python3-empy` (and common ROS Python deps)
+- [ ] Clean catkin cache/build artifacts
+- [ ] Rebuild with `/usr/bin/python3`
+- [ ] Verify `em` and `rospy` imports
+
+From your log, this is the key line:
+- `Using PYTHON_EXECUTABLE: /home/mameenali/anaconda3/bin/python3`
+
+ROS1 Noetic on Ubuntu should typically build against system Python, not Conda.
+
+```bash
+conda deactivate
+```
+
+If Conda auto-activates, disable that:
+
+```bash
+conda config --set auto_activate_base false
+exec bash
+```
+
+Install required packages:
+
+```bash
+sudo apt update
+sudo apt install -y python3-empy python3-rospkg python3-catkin-pkg python3-yaml
+```
+
+Clean workspace (to remove cached Conda Python path):
+
+```bash
+cd ~/catkin_ws
+rm -rf build devel
+```
+
+Source ROS and rebuild with system Python explicitly:
+
+```bash
+source /opt/ros/noetic/setup.bash
+catkin_make -DPYTHON_EXECUTABLE=/usr/bin/python3
+```
+
+Verify:
+
+```bash
+python3 -c "import em; print('em OK')"
+python3 -c "import rospy; print('rospy OK')"
+```
+
+Then source workspace:
+
+```bash
+source ~/catkin_ws/devel/setup.bash
+```
+
+If you want to keep using Conda for other projects, best practice is:
+1. Use **system Python** for ROS1 builds/runs.
+2. Only activate Conda in non-ROS terminals.
 ## References
 
 - [ROS 1 Noetic Installation](http://wiki.ros.org/noetic/Installation/Ubuntu)
